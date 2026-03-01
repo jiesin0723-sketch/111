@@ -248,10 +248,14 @@ if run_button and uploaded_file is not None:
         total_vol = merged_df["成交数量"].abs().sum()
         target_vol = target_df["成交数量"].abs().sum()
         ratio_vol = (target_vol / total_vol * 100) if total_vol > 0 else 0
+        total_count = len(merged_df)
+        target_count = len(target_df)
+        ratio_count = (target_count / total_count * 100) if total_count > 0 else 0
 
         # 同日交易分析
         mixed_days = 0
         single_days = 0
+        mixed_dates = []
         same_day_table = pd.DataFrame()
 
         if "交易日期" in merged_df.columns:
@@ -263,6 +267,7 @@ if run_button and uploaded_file is not None:
                 day_codes = day_data["证券代码"].dropna().unique()
                 if len(day_codes) > 1:
                     mixed_days += 1
+                    mixed_dates.append(date)
                 else:
                     single_days += 1
 
@@ -272,6 +277,15 @@ if run_button and uploaded_file is not None:
             st.warning("⚠️ 警告：未找到【交易日期】相关列，跳过同日交易分析。请检查Excel列名。")
 
         mixed_single_ratio = (mixed_days / single_days * 100) if single_days > 0 else 0
+
+        # 在“同时交易目标股票和其他股票”的日期中，计算目标成交量占当天总成交量比例
+        if mixed_dates and "交易日期" in merged_df.columns:
+            mixed_day_df = merged_df[merged_df["交易日期"].isin(mixed_dates)].copy()
+            mixed_total_vol = mixed_day_df["成交数量"].abs().sum()
+            mixed_target_vol = mixed_day_df[mixed_day_df["证券代码"] == target_code_norm]["成交数量"].abs().sum()
+            mixed_target_ratio = (mixed_target_vol / mixed_total_vol * 100) if mixed_total_vol > 0 else 0
+        else:
+            mixed_target_ratio = 0
 
         # 新增：成交均价趋势
         price_trend_df, trend_note = build_price_trend_df(target_df)
@@ -309,28 +323,20 @@ if run_button and uploaded_file is not None:
                 "指标": [
                     "目标股票代码",
                     "合并Sheet数量",
-                    "全账户交易记录数",
-                    "目标股票交易记录数",
-                    "全账户总成交量(绝对值)",
-                    "目标股票总成交量(绝对值)",
-                    "目标成交量占比(%)",
-                    "目标股票涉及交易日期数",
-                    "同日交易目标+其他股票天数",
+                    "交易目标股票次数占账户总交易次数比例",
+                    "交易目标股票总量占账户总交易量比例",
+                    "同时交易目标股票和其他股票的天数",
                     "仅交易目标股票天数",
-                    "混合/单一天数比(%)",
+                    "同时交易目标与其他股票日期中目标交易量占比",
                 ],
                 "数值": [
                     target_code_norm,
                     len(sheet_list) if sheet_list is not None else 0,
-                    len(merged_df),
-                    len(target_df),
-                    round(float(total_vol), 2),
-                    round(float(target_vol), 2),
-                    round(float(ratio_vol), 2),
-                    days_trade_target,
+                    f"{ratio_count:.2f}%",
+                    f"{ratio_vol:.2f}%",
                     mixed_days,
                     single_days,
-                    round(float(mixed_single_ratio), 2),
+                    f"{mixed_target_ratio:.2f}%",
                 ],
             }
         )
