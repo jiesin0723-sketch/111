@@ -1,6 +1,3 @@
-下面是可直接覆盖 `/Users/bamer/Desktop/法律skill/app.py` 的完整代码：
-
-```python
 import streamlit as st
 import pandas as pd
 import io
