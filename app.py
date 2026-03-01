@@ -327,7 +327,6 @@ if run_button and uploaded_file is not None:
                     "交易目标股票总量占账户总交易量比例",
                     "同时交易目标股票和其他股票的天数",
                     "仅交易目标股票天数",
-                    "同时交易目标与其他股票日期中目标交易量占比",
                 ],
                 "数值": [
                     target_code_norm,
@@ -336,7 +335,6 @@ if run_button and uploaded_file is not None:
                     f"{ratio_vol:.2f}%",
                     mixed_days,
                     single_days,
-                    f"{mixed_target_ratio:.2f}%",
                 ],
             }
         )
